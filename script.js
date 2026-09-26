@@ -316,8 +316,8 @@ function renderCartItems(){
       <span class="text-[10px] font-bold tracking-[.2em] uppercase text-sv-muted">Total de la commande</span>
       <span class="font-heading font-extrabold text-xl" style="background:linear-gradient(135deg,#e8621e,#d4a04a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${grandTotal.toLocaleString('fr-DZ')} DA</span>
     </div>
-    <button class="order-btn" onclick="placeOrder()">Commander via WhatsApp</button>
-    <p class="text-sv-muted text-[10px] text-center mt-3 tracking-wider">Livraison disponible à Mostaganem</p>`;
+    <button class="order-btn" onclick="openOrderModal()">Commander</button>
+    <p class="text-sv-muted text-[10px] text-center mt-3 tracking-wider">Sur place ou livraison à Mostaganem</p>`;
 }
 
 function openCart(){
@@ -335,15 +335,135 @@ function closeCart(){
   if(lenisInstance) lenisInstance.start();
 }
 
-function placeOrder(){
+/* ===== ORDER MODAL ===== */
+let selectedOrderType = null;
+
+function openOrderModal(){
   if(cart.length===0)return;
-  const items=cart.map(c=>
-    `• ${c.qty}x ${c.name}${c.addons.length?' + '+c.addons.map(a=>a.name).join(', '):''} — ${c.total.toLocaleString('fr-DZ')} DA`
-  ).join('\n');
-  const total=cart.reduce((s,c)=>s+c.total,0);
-  const msg=`🛒 *Nouvelle Commande — SAVANNAH*\n\n${items}\n\n💰 *Total : ${total.toLocaleString('fr-DZ')} DA*\n📍 Livraison : Mostaganem, Salamandre`;
-  window.open(`https://wa.me/213555123456?text=${encodeURIComponent(msg)}`,'_blank');
-  toast('Commande envoyée','Vous serez redirigé vers WhatsApp');
+  // Reset state
+  selectedOrderType = null;
+  document.getElementById('orderStep1').style.display='';
+  document.getElementById('orderStep2').style.display='none';
+  document.getElementById('btnDineIn').classList.remove('selected');
+  document.getElementById('btnDelivery').classList.remove('selected');
+  document.getElementById('checkDineIn').innerHTML='';
+  document.getElementById('checkDelivery').innerHTML='';
+  document.getElementById('orderNextBtn').disabled=true;
+  document.getElementById('orderForm').reset();
+  // Show modal
+  document.getElementById('orderModalOverlay').classList.add('active');
+  document.body.classList.add('locked');
+  if(lenisInstance) lenisInstance.stop();
+  closeCart();
+}
+
+function closeOrderModal(){
+  document.getElementById('orderModalOverlay').classList.remove('active');
+  document.body.classList.remove('locked');
+  if(lenisInstance) lenisInstance.start();
+}
+
+function selectOrderType(type){
+  selectedOrderType = type;
+  const isDineIn = type === 'dine-in';
+  document.getElementById('btnDineIn').classList.toggle('selected', isDineIn);
+  document.getElementById('btnDelivery').classList.toggle('selected', !isDineIn);
+  document.getElementById('checkDineIn').innerHTML  = isDineIn  ? '✓' : '';
+  document.getElementById('checkDelivery').innerHTML = !isDineIn ? '✓' : '';
+  document.getElementById('orderNextBtn').disabled = false;
+}
+
+function goToStep2(){
+  if(!selectedOrderType) return;
+  const isDineIn = selectedOrderType === 'dine-in';
+  // Update eyebrow label
+  document.getElementById('step2Eyebrow').textContent = isDineIn ? '🍽️ SUR PLACE' : '🏠 LIVRAISON';
+  // Show/hide conditional fields
+  document.getElementById('fieldTableWrap').style.display   = isDineIn  ? '' : 'none';
+  document.getElementById('fieldAddressWrap').style.display = !isDineIn ? '' : 'none';
+  // Set required
+  document.getElementById('fieldTable').required   = isDineIn;
+  document.getElementById('fieldAddress').required = !isDineIn;
+  // Update order summary total
+  const total = cart.reduce((s,c)=>s+c.total,0);
+  document.getElementById('orderSummaryTotal').textContent = total.toLocaleString('fr-DZ') + ' DA';
+  // Transition
+  document.getElementById('orderStep1').style.display='none';
+  document.getElementById('orderStep2').style.display='';
+}
+
+function goBackToStep1(){
+  document.getElementById('orderStep2').style.display='none';
+  document.getElementById('orderStep1').style.display='';
+}
+
+async function submitOrder(e){
+  e.preventDefault();
+  const submitBtn     = document.getElementById('orderSubmitBtn');
+  const submitText    = document.getElementById('orderSubmitText');
+  const submitSpinner = document.getElementById('orderSubmitSpinner');
+
+  // Gather form data
+  const customerName  = document.getElementById('fieldName').value.trim();
+  const rawPhone      = document.getElementById('fieldPhone').value.trim().replace(/\s/g,'');
+  // Prepend Algeria country code if not already there
+  const customerPhone = rawPhone.startsWith('213') ? rawPhone : '213' + rawPhone.replace(/^0/,'');
+  const tableNumber   = document.getElementById('fieldTable').value.trim();
+  const address       = document.getElementById('fieldAddress').value.trim();
+  const note          = document.getElementById('fieldNote').value.trim();
+  const grandTotal    = cart.reduce((s,c)=>s+c.total,0);
+
+  const payload = {
+    type:          selectedOrderType,
+    customerName,
+    customerPhone,
+    tableNumber,
+    address,
+    note,
+    grandTotal,
+    items: cart.map(c=>({
+      name:     c.name,
+      qty:      c.qty,
+      price:    c.price,
+      total:    c.total,
+      addons:   c.addons
+    }))
+  };
+
+  // Loading state
+  submitBtn.disabled=true;
+  submitText.style.display='none';
+  submitSpinner.style.display='';
+
+  try {
+    const res  = await fetch('/api/order', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if(res.ok && data.success){
+      // Success
+      closeOrderModal();
+      cart=[];
+      updateCartUI();
+      toast(
+        '✅ Commande envoyée !',
+        selectedOrderType==='dine-in'
+          ? `Table ${tableNumber} — Confirmation WhatsApp envoyée à ${customerName}`
+          : `Livraison confirmée — Confirmation WhatsApp envoyée à ${customerName}`
+      );
+    } else {
+      throw new Error(data.error || 'Erreur serveur');
+    }
+  } catch(err){
+    toast('❌ Erreur', err.message || 'Impossible d\'envoyer la commande.');
+  } finally {
+    submitBtn.disabled=false;
+    submitText.style.display='';
+    submitSpinner.style.display='none';
+  }
 }
 
 /* ===== TOAST ===== */
