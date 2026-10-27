@@ -1,5 +1,5 @@
 /* ============================================================
-   SAVANNAH — script.js (Complete)
+   SAPAN — script.js (Complete)
    ============================================================ */
 
 /* ===== DATA ===== */
@@ -15,14 +15,14 @@ const pizzas=[
   {name:"BBQ Chicken",genre:"Américaine",price:1100,desc:"Poulet grillé, sauce BBQ, oignons rouges, cheddar",best:false,img:"https://images.unsplash.com/photo-1528137871618-79d2761e3fd5?w=600&h=450&fit=crop"},
   {name:"Truffe Noire",genre:"Premium",price:1600,desc:"Crème de truffe, champignons, mozzarella, roquette",best:true,img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=450&fit=crop"},
   {name:"Capricciosa",genre:"Classique",price:1150,desc:"Jambon, champignons, artichauts, olives, mozzarella",best:false,img:"https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=600&h=450&fit=crop"},
-  {name:"Calzone",genre:"Spéciale",price:1200,desc:"Pizza pliée, jambon, mozzarella, champignons, oeuf",best:false,img:"https://images.unsplash.com/photo-1589790334644-ca0869a39926?w=600&h=450&fit=crop"},
+  {name:"Calzone",genre:"Spéciale",price:1200,desc:"Pizza pliée, jambon, mozzarella, champignons, oeuf",best:false,img:"https://media.istockphoto.com/id/476896912/photo/pizza-calzone.jpg?s=2048x2048&w=is&k=20&c=Po5EVgfXs6LyCfkL_Be9xEIAGErbLPEsY4VAIovUi8o="},
   {name:"Prosciutto",genre:"Italienne",price:1250,desc:"Prosciutto di Parma, roquette, parmesan, mozzarella",best:false,img:"https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&h=450&fit=crop"},
   {name:"Champignon",genre:"Végétarien",price:950,desc:"Champignons frais, crème, ail, persil, mozzarella",best:false,img:"https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=600&h=450&fit=crop"},
   {name:"Anchois",genre:"Poisson",price:1050,desc:"Anchois, câpres, olives, tomates séchées, origan",best:false,img:"https://images.unsplash.com/photo-1458642849426-cfb724f15ef7?w=600&h=450&fit=crop"},
   {name:"Mexicaine",genre:"Piquante",price:1100,desc:"Boeuf épicé, piments, maïs, haricots, guacamole",best:false,img:"https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=600&h=450&fit=crop"},
   {name:"Méditerranéenne",genre:"Méditerranée",price:1150,desc:"Tomates séchées, feta, olives noires, basilic",best:false,img:"https://images.unsplash.com/photo-1511689660979-10d2b1aada49?w=600&h=450&fit=crop"},
-  {name:"Savanah Spéciale",genre:"Signature",price:1500,desc:"Merguez, poivrons grillés, oignons caramélisés, fromage fondu",best:true,img:"https://images.unsplash.com/photo-1579888944880-d98341245702?w=600&h=450&fit=crop"},
-  {name:"Reine",genre:"Classique",price:1200,desc:"Jambon, champignons, mozzarella, sauce tomate",best:false,img:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=600&h=450&fit=crop"},
+  {name:"Sapan Spéciale",genre:"Signature",price:1500,desc:"Merguez, poivrons grillés, oignons caramélisés, fromage fondu",best:true,img:"https://images.unsplash.com/photo-1579888944880-d98341245702?w=600&h=450&fit=crop"},
+  {name:"Reine",genre:"Classique",price:1200,desc:"Jambon, champignons, mozzarella, sauce tomate",best:false,img:"https://as1.ftcdn.net/jpg/13/56/65/34/1000_F_1356653443_qns4ZNHYtHumF6S2GdsKRlIgbL6O2sw4.jpg"},
   {name:"Mozzarella",genre:"Classique",price:850,desc:"Double mozzarella, sauce tomate basilic, huile d'olive",best:false,img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=450&fit=crop"}
 ];
 
@@ -317,7 +317,7 @@ function renderCartItems(){
       <span class="font-heading font-extrabold text-xl" style="background:linear-gradient(135deg,#e8621e,#d4a04a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${grandTotal.toLocaleString('fr-DZ')} DA</span>
     </div>
     <button class="order-btn" onclick="openOrderModal()">Commander</button>
-    <p class="text-sv-muted text-[10px] text-center mt-3 tracking-wider">Sur place ou livraison à Mostaganem</p>`;
+    <p class="text-sv-muted text-[10px] text-center mt-3 tracking-wider">Sur place ou livraison</p>`;
 }
 
 function openCart(){
@@ -451,8 +451,8 @@ async function submitOrder(e){
       toast(
         '✅ Commande envoyée !',
         selectedOrderType==='dine-in'
-          ? `Table ${tableNumber} — Confirmation WhatsApp envoyée à ${customerName}`
-          : `Livraison confirmée — Confirmation WhatsApp envoyée à ${customerName}`
+          ? `Table ${tableNumber} — Merci ${customerName}, nous préparons votre commande`
+          : `Merci ${customerName}, nous vous contacterons sur WhatsApp pour confirmer`
       );
     } else {
       throw new Error(data.error || 'Erreur serveur');
